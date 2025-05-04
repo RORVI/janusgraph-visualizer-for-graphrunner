@@ -73,7 +73,8 @@ app.post('/query', (req, res, next) => {
   const query = req.body.query;
   const traversalSource = req.body.traversalSource;
 
-  const client = new gremlin.driver.Client(`ws://${gremlinHost}:${gremlinPort}/gremlin`, { traversalSource: traversalSource, mimeType: 'application/json' });
+  const endpoint = firstNotNull(process.env.GREMLIN_ENDPOINT, 'ws://localhost:8182/gremlin');
+  const client = new gremlin.driver.Client(endpoint, { traversalSource: traversalSource, mimeType: 'application/json' });
 
   client.submit(makeQuery(query, nodeLimit), {})
     .then((result) => res.send(nodesToJson(result._items)))
@@ -83,8 +84,7 @@ app.post('/query', (req, res, next) => {
 
 app.get('/settings', (_, res) => {
   return res.json({
-    GREMLIN_HOST: firstNotNull(process.env.GREMLIN_HOST, 'localhost'),
-    GREMLIN_PORT: firstNotNull(process.env.GREMLIN_PORT, '8182'),
+    GREMLIN_ENDPOINT: firstNotNull(process.env.GREMLIN_ENDPOINT, 'ws://localhost:8182/gremlin'),
     GREMLIN_TRAVERSAL_SOURCE: firstNotNull(process.env.GREMLIN_TRAVERSAL_SOURCE, 'g'),
     GREMLIN_DEFAULT_QUERY: firstNotNull(process.env.GREMLIN_DEFAULT_QUERY, 'g.V()'),
   });

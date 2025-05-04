@@ -1,74 +1,87 @@
-# JanusGraph-Visualizer
-This project is to visualize the graph network corresponding to a gremlin query.
+# JanusGraph-Visualizer for GraphRunner
+This project visualizes graph data queried from a JanusGraph backend via Gremlin. This fork is fully Docker-integrated and customized to support [GraphRunner](https://github.com/RORVI/GraphRunner), including robust container communication, environment configuration, and simplified deployment.
 
-![alt text](https://raw.githubusercontent.com/JanusGraph/janusgraph-visualizer/refs/heads/main/assets/JanusGraph-Visualizer.png)
+![Visualizer Screenshot](https://raw.githubusercontent.com/JanusGraph/janusgraph-visualizer/refs/heads/main/assets/JanusGraph-Visualizer.png)
 
-### Quick start guide
+---
 
-Below is a quick start guide to start JanusGraph, load the testing graph, and start visualization to show the graph.  
-Notice, this guide uses Docker compose, but it's possible to start JanusGraph and visualization tool without (see `Setting Up JanusGraph Visualizer` section below).
+## 🚀 Quick Start (GraphRunner Integration)
 
-1. Start the docker services using `docker compose up` for the starting the Janusgraph service, loading the test data and starting the visualization service.
-2. (Optional) If you want to specially build the visualizer from the source code, use `docker compose up --build`.
-3. Open your browser and enter address `http://localhost:3001/`
-4. Click `EXECUTE` button. You should see the same graph as the one specified on the image above.
-5. The Docker containers can be stopped by calling `docker compose down`.
+1. Make sure the GraphRunner stack is up and running (`janusgraph` should be running on Docker network `graphrunner_default`).
+2. Run the visualizer with Docker using the script:
 
-### Setting Up JanusGraph Visualizer
-To setup JanusGraph visualizer, you need to have `node.js` and `npm` installed in your system.
-
-* Clone the project
-```sh
-git clone https://github.com/JanusGraph/janusgraph-visualizer.git
+```bash
+./start-visualizer.sh
 ```
-* Install dependencies
-```sh
-npm install
+
+Or, on Windows:
+```bat
+start-visualizer.bat
 ```
-* Run the project
-```sh
-npm start
-```
-* Open the browser and navigate to
+
+3. Open your browser and go to:
 ```sh
 http://localhost:3000
 ```
+4. Run a basic query such as:
+```gremlin
+g.V().limit(5)
+```
+5. 🎉 Enjoy your live JanusGraph visualizer.
 
-Note - Frontend starts on port 3000 and simple Node.js server also starts on port 3001. If you need to change the ports, configure in `package.json`, `proxy-server.js`, `src/constants` 
+---
 
-See [docs/docker-build.md](docs/docker-build.md) to learn how to build the project directly using Docker images.
+## 🐳 Docker Build
 
-### Supported Environment Variables
+To build the visualizer locally:
 
-* `GREMLIN_HOST` - sets gremlin server hostname for connection. Default is `janusgraph` if started via `docker compose up` (`docker-compose.yml` receives this value from `.env` file) or `localhost` if started directly via `docker run`.
-* `GREMLIN_PORT` - sets gremlin server port for connection. Default is `8182`.
-* `GREMLIN_TRAVERSAL_SOURCE` - sets default graph traversal source name to be used for queries. Default is `g`.
-* `GREMLIN_DEFAULT_QUERY` - sets default query to show in visualizer. Default is `g.V()`.
+```bash
+docker build -t janusgraph-visualizer-custom -f full.Dockerfile .
+```
 
-You can change these values in the .env file.
+To run manually:
+```bash
+docker run --rm \
+  --name janusgraph-visualizer \
+  --network graphrunner_default \
+  -e GREMLIN_ENDPOINT=ws://janusgraph:8182/gremlin \
+  -e GREMLIN_MIME_TYPE=application/vnd.gremlin-v2.0+json \
+  -p 3000:3001 \
+  janusgraph-visualizer-custom
+```
 
-### Usage
-* Start JanusGraph-Visualizer as mentioned above
-* Specify the host and port of the gremlin server
-* Write a gremlin query to retrieve a set of nodes (eg. `g.V()`)
+---
 
-### Features
-* If you don't clear the graph and execute another gremlin query, results of previous query and new query will be merged and be shown.
-* Node and edge properties are shown once you click on a node/edge
-* Change the labels of nodes to any property
-* View the set of queries executed to generate the graph
-* Traverse in/out from the selected node
+## 🌐 Environment Variables
 
-## Credits
-JanusGraph-Visualizer is based on the original Gremlin-Visualizer that can be found [here](https://github.com/prabushitha/gremlin-visualizer).   
-Author of the original Gremlin-Visualizer is: [Umesh Jayasinghe](https://github.com/prabushitha).
+- `GREMLIN_ENDPOINT`: Full WebSocket URL to the Gremlin server (e.g., `ws://janusgraph:8182/gremlin`)
+- `GREMLIN_TRAVERSAL_SOURCE`: Default traversal source (default: `g`)
+- `GREMLIN_DEFAULT_QUERY`: Default query to show on load (default: `g.V()`)
 
-### What is the different in this fork comparing to the origin repo
-1. Added suppport for different graph names
-2. Added GitHub actions to build & push Docker image
-3. Added productions mode to host in Kubernetes
-4. Added ability to override default values (graph host, port, name) via environment variables
+These are injected at runtime and respected by both frontend and backend components.
 
-## Something Missing?
+---
 
-If you have new ideas to improve please create an issue and make a pull request
+## ⚙️ Features
+- Works seamlessly inside Docker and on custom Docker networks
+- Accepts configuration via environment variables
+- Integrates with GraphRunner’s JanusGraph backend without conflicts
+- Optional React frontend served statically by the Node proxy
+- Custom queries and traversal source support
+
+---
+
+## 📂 Project Structure Changes
+- `full.Dockerfile`: Custom production-ready Dockerfile
+- `proxy-server.js`: Now uses `GREMLIN_ENDPOINT` directly from env
+- Frontend talks to `/settings` for dynamic endpoint info
+
+---
+
+## Credits & Origin
+Based on the original [Gremlin-Visualizer](https://github.com/prabushitha/gremlin-visualizer) by [Umesh Jayasinghe](https://github.com/prabushitha).
+
+---
+
+## 🤝 Contributions Welcome
+PRs, improvements, and ideas are encouraged. File issues or send a PR if you want to help polish the visualizer further for the JanusGraph + GraphRunner ecosystem.

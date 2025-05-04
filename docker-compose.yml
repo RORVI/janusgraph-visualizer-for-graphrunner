@@ -52,6 +52,7 @@ services:
       - .env
     environment:
       NODE_ENV: production
+      GREMLIN_ENDPOINT: ws://janusgraph:8182/gremlin
 
 networks:
   janus_bridge:
